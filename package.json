@@ -1,0 +1,36 @@
+{
+    "name": "intelligence-query-enginee",
+    "version": "1.0.0",
+    "description": "Profile Intelligence Service - Stage One: Multi-API Integration & Data Persistence",
+    "main": "dist/main.js",
+    "scripts": {
+        "build": "tsc && echo Build completed successfully.",
+        "start": "node dist/main.js",
+        "dev": "ts-node src/main.ts",
+        "test": "ts-node tests/profiles.test.ts",
+        "seed": "ts-node src/scripts/seed-database.ts",
+        "release:version": "pnpm version",
+        "release:changelog": "echo 'Update CHANGELOG.md manually'"
+    },
+    "keywords": ["profile", "intelligence", "api", "genderize", "agify", "nationalize", "enginee", "hng"],
+    "author": "Udoh, Idopise Edwin",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "^1.12.2",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.3",
+        "express": "^5.1.0",
+        "pg": "^8.11.3",
+        "typeorm": "^0.3.17",
+        "uuid": "^13.0.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.3",
+        "@types/node": "^24.9.1",
+        "@types/uuid": "^9.0.7",
+        "reflect-metadata": "^0.1.13",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.3"
+    }
+}
