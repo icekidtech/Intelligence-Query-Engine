@@ -120,13 +120,21 @@ export class QueryParser {
    * @returns 'male' | 'female' | undefined
    */
   private extractGender(query: string): 'male' | 'female' | undefined {
+    const hasMale = /\b(males?|men|boys?)\b/.test(query);
+    const hasFemale = /\b(females?|women?|girls?)\b/.test(query);
+
+    // If both are present (e.g. "male and female"), leave gender unset.
+    if (hasMale && hasFemale) {
+      return undefined;
+    }
+
     // Match male patterns (including plurals)
-    if (/\b(males?|men|boys?)\b/.test(query)) {
+    if (hasMale) {
       return 'male';
     }
 
     // Match female patterns (including plurals)
-    if (/\b(females?|women?|girls?)\b/.test(query)) {
+    if (hasFemale) {
       return 'female';
     }
 
