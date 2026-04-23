@@ -92,8 +92,8 @@ export class FilterService {
 
     if (params.limit !== undefined) {
       const limit = parseInt(params.limit, 10);
-      if (isNaN(limit) || limit < 1 || limit > 50) {
-        errors.push('limit must be a number between 1 and 50');
+      if (isNaN(limit) || limit < 1) {
+        errors.push('limit must be a number >= 1');
       }
     }
 
