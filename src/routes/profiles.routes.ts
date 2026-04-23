@@ -6,7 +6,6 @@ import {
   CreateProfileRequest,
   CreateProfileResponse,
   GetProfileResponse,
-  ListProfilesResponse,
   ProfileFilters,
 } from '../types/index.types';
 
@@ -218,30 +217,46 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
 
-    const profile = await profileRepository.findById(id);
-    if (!profile) {
+    // Validate UUID format (basic check)
+    if (!id || typeof id !== 'string') {
       return res.status(404).json({
         status: 'error',
         message: 'Profile not found',
       });
     }
 
-    return res.status(200).json({
-      status: 'success',
-      data: {
-        id: profile.id,
-        name: profile.name,
-        gender: profile.gender,
-        gender_probability: profile.gender_probability,
-        sample_size: profile.sample_size,
-        age: profile.age,
-        age_group: profile.age_group,
-        country_id: profile.country_id,
-        country_name: profile.country_name,
-        country_probability: profile.country_probability,
-        created_at: profile.created_at.toISOString(),
-      },
-    } as GetProfileResponse);
+    try {
+      const profile = await profileRepository.findById(id);
+      if (!profile) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'Profile not found',
+        });
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          id: profile.id,
+          name: profile.name,
+          gender: profile.gender,
+          gender_probability: profile.gender_probability,
+          sample_size: profile.sample_size,
+          age: profile.age,
+          age_group: profile.age_group,
+          country_id: profile.country_id,
+          country_name: profile.country_name,
+          country_probability: profile.country_probability,
+          created_at: profile.created_at.toISOString(),
+        },
+      } as GetProfileResponse);
+    } catch (dbError) {
+      // Database query error - likely invalid UUID format or connection issue
+      return res.status(404).json({
+        status: 'error',
+        message: 'Profile not found',
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       status: 'error',
@@ -309,6 +324,15 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     // Otherwise, use basic filtering (for backward compatibility)
+    // But still validate parameters
+    const validation = filterService.validateFilters(req.query);
+    if (!validation.valid) {
+      return res.status(422).json({
+        status: 'error',
+        message: validation.errors.join('; '),
+      });
+    }
+
     const filters: ProfileFilters = {};
 
     // Extract query parameters (case-insensitive)
@@ -322,20 +346,27 @@ router.get('/', async (req: Request, res: Response) => {
       filters.age_group = String(req.query.age_group).toLowerCase();
     }
 
-    const profiles = await profileRepository.findAll(filters);
+    // Get pagination parameters
+    const pagination = filterService.normalizePagination(req.query);
+
+    // Use advanced query with pagination even for basic filters
+    const result = await profilesService.queryProfiles(filters, undefined, pagination);
+
+    // Convert created_at to ISO string for all profiles
+    const data = result.data.map((profile: any) => ({
+      ...profile,
+      created_at: profile.created_at instanceof Date
+        ? profile.created_at.toISOString()
+        : profile.created_at,
+    }));
 
     return res.status(200).json({
-      status: 'success',
-      count: profiles.length,
-      data: profiles.map((profile) => ({
-        id: profile.id,
-        name: profile.name,
-        gender: profile.gender,
-        age: profile.age,
-        age_group: profile.age_group,
-        country_id: profile.country_id,
-      })),
-    } as ListProfilesResponse);
+      status: result.status,
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      data,
+    });
   } catch (error) {
     return res.status(500).json({
       status: 'error',
