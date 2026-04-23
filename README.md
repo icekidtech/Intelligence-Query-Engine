@@ -112,20 +112,20 @@ GET /api/profiles?age_group=teenager&min_country_probability=0.8&page=2&limit=25
 
 ```
 ┌─────────────────────────────────────────────┐
-│         REST API Layer                       │
+│         REST API Layer                      │
 │  (Express 5.1.0 with TypeScript)            │
 └──────────────┬──────────────────────────────┘
                │
         ┌──────┴──────┬──────────────┐
         │             │              │
     ┌───▼───┐   ┌────▼────┐   ┌────▼────┐
-    │Routes │   │Services  │   │Filters  │
-    └───────┘   │- Profiles│   │& Parser │
-                │- Filter  │   └────┬────┘
-                │- Parser  │        │
-                └────┬─────┘        │
-                     │              │
-               ┌─────▼──────────────┘
+    │Routes │   │Services │   │Filters  │
+    └───────┘   │-Profiles│   │& Parser │
+                │-Filter  │   └────┬────┘
+                │-Parser  │        │
+                └────┬────┘        │
+                     │             │
+               ┌─────▼─────────────┘
                │
         ┌──────▼───────────────┐
         │ Repository Layer     │
@@ -134,7 +134,7 @@ GET /api/profiles?age_group=teenager&min_country_probability=0.8&page=2&limit=25
                │
         ┌──────▼──────────────────┐
         │  PostgreSQL Database    │
-        │  (profiles table)        │
+        │  (profiles table)       │
         └─────────────────────────┘
 ```
 
@@ -191,7 +191,7 @@ GET /api/profiles?age_group=teenager&min_country_probability=0.8&page=2&limit=25
    ```bash
    pnpm seed
    ```
-   Loads 2026 profiles from `stage-two/seed_profiles.json`. Safe to re-run—duplicates are skipped.
+  Loads 2026 profiles from `seed_profiles.json` at the project root. Safe to re-run—duplicates are skipped.
 
 7. **Start development server:**
    ```bash
@@ -747,7 +747,7 @@ Error: Seed file not found
 
 **Solution:**
 - Run from project root: `cd stage-two && pnpm seed`
-- Verify `stage-two/seed_profiles.json` exists
+- Verify `seed_profiles.json` exists at project root
 - Check file has read permissions
 
 ### Migrations Not Applied
