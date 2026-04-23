@@ -60,5 +60,19 @@ export function validateSeedProfile(profile: any): profile is SeedProfileData {
  * @returns Full path to seed_profiles.json
  */
 export function getSeedFilePath(): string {
-  return path.join(process.cwd(), 'stage-two', 'seed_profiles.json');
+  // Support both monorepo layout (.../stage-two/seed_profiles.json)
+  // and standalone VPS deployment (.../seed_profiles.json).
+  const candidatePaths = [
+    path.join(process.cwd(), 'seed_profiles.json'),
+    path.join(process.cwd(), 'stage-two', 'seed_profiles.json'),
+  ];
+
+  for (const candidate of candidatePaths) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Return default root path so the caller error still shows a useful location.
+  return candidatePaths[0];
 }
