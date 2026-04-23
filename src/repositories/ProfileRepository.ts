@@ -233,8 +233,18 @@ export class ProfileRepository {
     for (const profile of profiles) {
       try {
         // Check if profile already exists by name (case-insensitive)
-        const exists = await this.existsByName(profile.name);
-        if (exists) {
+        const existing = await this.findByName(profile.name);
+        if (existing) {
+          // Keep id and created_at stable, but refresh seeded demographic fields.
+          existing.gender = profile.gender ?? null;
+          existing.gender_probability = profile.gender_probability ?? null;
+          existing.age = profile.age ?? null;
+          existing.age_group = profile.age_group ?? null;
+          existing.country_id = profile.country_id ?? null;
+          existing.country_name = profile.country_name ?? null;
+          existing.country_probability = profile.country_probability ?? null;
+
+          await this.repository.save(existing);
           skipped++;
           continue;
         }
@@ -244,13 +254,13 @@ export class ProfileRepository {
           id: uuidv7(),
           name: profile.name,
           name_lower: profile.name.toLowerCase(),
-          gender: profile.gender || null,
-          gender_probability: profile.gender_probability || null,
-          age: profile.age || null,
-          age_group: profile.age_group || null,
-          country_id: profile.country_id || null,
-          country_name: profile.country_name || null,
-          country_probability: profile.country_probability || null,
+          gender: profile.gender ?? null,
+          gender_probability: profile.gender_probability ?? null,
+          age: profile.age ?? null,
+          age_group: profile.age_group ?? null,
+          country_id: profile.country_id ?? null,
+          country_name: profile.country_name ?? null,
+          country_probability: profile.country_probability ?? null,
         });
 
         await this.repository.save(newProfile);
