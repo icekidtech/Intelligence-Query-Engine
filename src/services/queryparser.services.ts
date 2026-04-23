@@ -120,13 +120,13 @@ export class QueryParser {
    * @returns 'male' | 'female' | undefined
    */
   private extractGender(query: string): 'male' | 'female' | undefined {
-    // Match male patterns
-    if (/\b(male|man|men|boy|boys)\b/.test(query)) {
+    // Match male patterns (including plurals)
+    if (/\b(males?|men|boys?)\b/.test(query)) {
       return 'male';
     }
 
-    // Match female patterns
-    if (/\b(female|woman|women|girl|girls)\b/.test(query)) {
+    // Match female patterns (including plurals)
+    if (/\b(females?|women?|girls?)\b/.test(query)) {
       return 'female';
     }
 
@@ -139,19 +139,19 @@ export class QueryParser {
    * @returns age_group or undefined
    */
   private extractAgeGroup(query: string): string | undefined {
-    if (/\b(teenager|teens|teenage)\b/.test(query)) {
+    if (/\b(teenagers?|teens|teenage)\b/.test(query)) {
       return 'teenager';
     }
 
-    if (/\b(adult|adults)\b/.test(query)) {
+    if (/\b(adults?)\b/.test(query)) {
       return 'adult';
     }
 
-    if (/\b(senior|elderly|seniors|old|aged)\b/.test(query)) {
+    if (/\b(seniors?|elderly|old|aged)\b/.test(query)) {
       return 'senior';
     }
 
-    if (/\b(child|children|kid|kids)\b/.test(query)) {
+    if (/\b(children?|kids?)\b/.test(query)) {
       return 'child';
     }
 
