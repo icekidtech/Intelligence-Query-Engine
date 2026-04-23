@@ -7,8 +7,10 @@
         "build": "tsc && echo Build completed successfully.",
         "start": "node dist/main.js",
         "dev": "ts-node src/main.ts",
-        "test": "ts-node tests/profiles.test.ts",
-        "seed": "ts-node src/scripts/seed-database.ts",
+        "test": "ts-node tests/profiles.test.ts && ts-node tests/api.test.ts",
+        "test:profiles": "ts-node tests/profiles.test.ts",
+        "test:api": "ts-node tests/api.test.ts",
+                "seed": "ts-node src/scripts/seed-database.ts",
         "release:version": "pnpm version",
         "release:changelog": "echo 'Update CHANGELOG.md manually'"
     },
