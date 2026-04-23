@@ -13,13 +13,27 @@ export class FilterService {
     const errors: string[] = [];
 
     // Gender validation
-    if (params.gender !== undefined && typeof params.gender !== 'string') {
-      errors.push('gender must be a string');
+    if (params.gender !== undefined) {
+      if (typeof params.gender !== 'string') {
+        errors.push('gender must be a string');
+      } else {
+        const validGenders = ['male', 'female'];
+        if (!validGenders.includes(params.gender.toLowerCase())) {
+          errors.push('gender must be one of: male, female');
+        }
+      }
     }
 
     // Age group validation
-    if (params.age_group !== undefined && typeof params.age_group !== 'string') {
-      errors.push('age_group must be a string');
+    if (params.age_group !== undefined) {
+      if (typeof params.age_group !== 'string') {
+        errors.push('age_group must be a string');
+      } else {
+        const validAgeGroups = ['child', 'teenager', 'adult', 'senior'];
+        if (!validAgeGroups.includes(params.age_group.toLowerCase())) {
+          errors.push('age_group must be one of: child, teenager, adult, senior');
+        }
+      }
     }
 
     // Country ID validation
