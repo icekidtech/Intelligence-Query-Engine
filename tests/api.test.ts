@@ -547,10 +547,20 @@ async function testQueryValidation() {
     }
 
     printSubsection('5.9 Unparseable NLP Query');
-    let res = await axios.get(`${API_BASE}/profiles/search?q=xyz+abc+def`);
-    assert(res.status === 200, 'Unparseable query returns 200 (not error)');
-    assert(res.data.status === 'error', 'But status field indicates error');
-    assert(res.data.message.includes('Unable to interpret'), 'Error message is descriptive');
+    try {
+      await axios.get(`${API_BASE}/profiles/search?q=xyz+abc+def`);
+      assert(false, 'Unparseable query should fail with 422');
+    } catch (error) {
+      const err = error as AxiosError;
+      assertStatus(err.response?.status || 0, 422, 'Unparseable query returns 422');
+      const responseData = err.response?.data as any;
+      assert(responseData?.status === 'error', 'Error envelope has status=error');
+      assert(
+        typeof responseData?.message === 'string' &&
+          responseData.message.includes('Unable to interpret'),
+        'Error message is descriptive'
+      );
+    }
   } catch (error) {
     console.error('Validation Error:', error instanceof Error ? error.message : error);
   }
