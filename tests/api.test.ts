@@ -571,8 +571,9 @@ async function testErrorHandling() {
     } catch (error) {
       const err = error as AxiosError;
       assertStatus(err.response?.status || 0, 404, 'Invalid profile ID returns 404');
+      const responseData = err.response?.data as any;
       assert(
-        err.response?.data?.message.includes('not found'),
+        responseData?.message?.includes('not found'),
         'Error message mentions "not found"'
       );
     }
@@ -600,9 +601,10 @@ async function testErrorHandling() {
       await axios.get(`${API_BASE}/profiles?gender=invalid`);
     } catch (error) {
       const err = error as AxiosError;
-      assert(err.response?.data?.status === 'error', 'Error response has status=error');
+      const responseData = err.response?.data as any;
+      assert(responseData?.status === 'error', 'Error response has status=error');
       assert(
-        typeof err.response?.data?.message === 'string',
+        typeof responseData?.message === 'string',
         'Error response has message string'
       );
     }
@@ -708,8 +710,9 @@ async function testResponseStructure() {
 
     printSubsection('8.5 Content-Type Header');
     res = await axios.get(`${API_BASE}/profiles?limit=1`);
+    const contentType = String(res.headers['content-type'] || '');
     assert(
-      res.headers['content-type'].includes('application/json'),
+      contentType.includes('application/json'),
       'Content-Type is application/json'
     );
   } catch (error) {
