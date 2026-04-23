@@ -185,6 +185,13 @@ router.get('/search', async (req: Request, res: Response) => {
       normalizedPagination
     );
 
+    if (result.status === 'error') {
+      return res.status(422).json({
+        status: 'error',
+        message: result.message || 'Unable to interpret query',
+      });
+    }
+
     // Convert created_at to ISO string for all profiles
     const data = result.data.map((profile: any) => ({
       ...profile,
