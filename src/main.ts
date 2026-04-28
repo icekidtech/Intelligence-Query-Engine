@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { corsMiddleware, manualCors } from './middleware/index.middleware';
 import { healthRoute } from './routes/health.routes';
 import profileRoutes from './routes/profiles.routes';
+import authRoutes from './auth/routes';
 import { initializeDatabase, closeDatabase } from './database';
 
 dotenv.config();
@@ -26,6 +27,9 @@ app.use(manualCors);
 
 // Health check
 app.get('/health', healthRoute);
+
+// Stage 3: Authentication endpoints
+app.use('/auth', authRoutes);
 
 // Stage 1: Profile management endpoints
 app.use('/api/profiles', profileRoutes);
@@ -52,6 +56,7 @@ async function startServer() {
     // Start server
     app.listen(port, () => {
       console.log(`Server running on http://localhost:${port}`);
+      console.log(`Stage 3 - Auth endpoints: http://localhost:${port}/auth`);
       console.log(`Stage 1 - Profile endpoints: http://localhost:${port}/api/profiles`);
     });
   } catch (error) {
