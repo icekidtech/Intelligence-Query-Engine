@@ -1,0 +1,425 @@
+{
+  "info": {
+    "name": "Insighta Labs+ - Stage 3 API",
+    "description": "Complete API documentation for Insighta Labs+ Stage 3 with authentication, authorization, and profile management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "GitHub OAuth 2.0 with PKCE flow for secure authentication",
+      "item": [
+        {
+          "name": "1. Initiate GitHub OAuth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/github?code_challenge={{code_challenge}}&state={{state}}",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "github"],
+              "query": [
+                {
+                  "key": "code_challenge",
+                  "value": "{{code_challenge}}",
+                  "description": "SHA-256 derived code challenge (PKCE)"
+                },
+                {
+                  "key": "state",
+                  "value": "{{state}}",
+                  "description": "Unique state parameter for CSRF protection"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "http://localhost:5000/auth/github/callback",
+                  "description": "Optional: Redirect URI for callback",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Initiates GitHub OAuth flow with PKCE\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"authUrl\": \"https://github.com/login/oauth/authorize?...\"\n}\n```\n\n**Steps:**\n1. Generate code_verifier (43-128 chars, URL-safe)\n2. Derive code_challenge from code_verifier using SHA-256\n3. Generate unique state parameter\n4. Call this endpoint to get GitHub authorization URL\n5. Redirect user to the authUrl"
+          },
+          "response": []
+        },
+        {
+          "name": "2. GitHub OAuth Callback (CLI)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/github/callback?code={{github_code}}&state={{state}}&client_type=cli",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "github", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "{{github_code}}",
+                  "description": "Authorization code from GitHub"
+                },
+                {
+                  "key": "state",
+                  "value": "{{state}}",
+                  "description": "State parameter for CSRF validation"
+                },
+                {
+                  "key": "client_type",
+                  "value": "cli",
+                  "description": "Client type: 'cli' or 'web'"
+                }
+              ]
+            },
+            "description": "Handles GitHub OAuth callback for CLI\n\n**Response (CLI):**\n```json\n{\n  \"status\": \"success\",\n  \"user\": {\n    \"id\": \"uuid\",\n    \"username\": \"github_username\",\n    \"email\": \"user@example.com\",\n    \"avatarUrl\": \"https://avatars.githubusercontent.com/...\",\n    \"role\": \"analyst\"\n  },\n  \"tokens\": {\n    \"accessToken\": \"eyJhbGc...\",\n    \"refreshToken\": \"eyJhbGc...\",\n    \"accessTokenExpiresIn\": 180,\n    \"refreshTokenExpiresIn\": 300\n  }\n}\n```\n\n**Note:** For web portal, use `client_type=web` to receive HTTP-only cookies instead"
+          },
+          "response": []
+        },
+        {
+          "name": "3. GitHub OAuth Callback (Web)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/github/callback?code={{github_code}}&state={{state}}&client_type=web",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "github", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "{{github_code}}",
+                  "description": "Authorization code from GitHub"
+                },
+                {
+                  "key": "state",
+                  "value": "{{state}}",
+                  "description": "State parameter for CSRF validation"
+                },
+                {
+                  "key": "client_type",
+                  "value": "web",
+                  "description": "Client type: 'cli' or 'web'"
+                }
+              ]
+            },
+            "description": "Handles GitHub OAuth callback for Web Portal\n\n**Response (Web):**\n- Sets HTTP-only cookies: `accessToken`, `refreshToken`\n- Redirects to: `{{web_portal_url}}/dashboard`\n\n**Cookies Set:**\n- `accessToken`: HTTP-only, Secure, SameSite=Strict, MaxAge=180s\n- `refreshToken`: HTTP-only, Secure, SameSite=Strict, MaxAge=300s"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh access token using refresh token\n\n**Request Body:**\n```json\n{\n  \"refresh_token\": \"eyJhbGc...\"\n}\n```\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"accessToken\": \"eyJhbGc...\",\n  \"refreshToken\": \"eyJhbGc...\",\n  \"accessTokenExpiresIn\": 180,\n  \"refreshTokenExpiresIn\": 300\n}\n```\n\n**Important:**\n- Old refresh token is immediately invalidated\n- New token pair is issued\n- Prevents token reuse attacks"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout user and invalidate all refresh tokens\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}`\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"message\": \"Logged out successfully\"\n}\n```\n\n**Effects:**\n- All refresh tokens for user are revoked\n- HTTP-only cookies are cleared (web portal)\n- User must re-authenticate to access protected endpoints"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get current authenticated user information\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}`\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"username\": \"github_username\",\n    \"email\": \"user@example.com\",\n    \"avatarUrl\": \"https://avatars.githubusercontent.com/...\",\n    \"role\": \"analyst\",\n    \"isActive\": true,\n    \"lastLoginAt\": \"2024-04-27T10:30:00Z\",\n    \"createdAt\": \"2024-04-27T10:00:00Z\"\n  }\n}\n```"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Profiles",
+      "description": "Profile management endpoints (Stage 2 functionality maintained)",
+      "item": [
+        {
+          "name": "1. List Profiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token"
+              },
+              {
+                "key": "X-API-Version",
+                "value": "1",
+                "description": "API version (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/profiles?page=1&limit=10&gender=male&country=NG&sort-by=age&order=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profiles"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Results per page (default: 10)"
+                },
+                {
+                  "key": "gender",
+                  "value": "male",
+                  "description": "Filter by gender (male/female)",
+                  "disabled": true
+                },
+                {
+                  "key": "country",
+                  "value": "NG",
+                  "description": "Filter by country code",
+                  "disabled": true
+                },
+                {
+                  "key": "age-group",
+                  "value": "adult",
+                  "description": "Filter by age group",
+                  "disabled": true
+                },
+                {
+                  "key": "min-age",
+                  "value": "25",
+                  "description": "Minimum age",
+                  "disabled": true
+                },
+                {
+                  "key": "max-age",
+                  "value": "40",
+                  "description": "Maximum age",
+                  "disabled": true
+                },
+                {
+                  "key": "sort-by",
+                  "value": "age",
+                  "description": "Sort field (age, name, gender, country)",
+                  "disabled": true
+                },
+                {
+                  "key": "order",
+                  "value": "desc",
+                  "description": "Sort order (asc/desc)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List profiles with filtering, sorting, and pagination\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}`\n- `X-API-Version: 1` (required)\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"page\": 1,\n  \"limit\": 10,\n  \"total\": 2026,\n  \"total_pages\": 203,\n  \"links\": {\n    \"self\": \"/api/profiles?page=1&limit=10\",\n    \"next\": \"/api/profiles?page=2&limit=10\",\n    \"prev\": null\n  },\n  \"data\": [\n    {\n      \"id\": \"uuid\",\n      \"name\": \"John Doe\",\n      \"gender\": \"male\",\n      \"gender_probability\": 0.95,\n      \"age\": 28,\n      \"age_group\": \"adult\",\n      \"country_id\": \"US\",\n      \"country_name\": \"United States\",\n      \"country_probability\": 0.89,\n      \"created_at\": \"2024-04-27T10:00:00Z\"\n    }\n  ]\n}\n```\n\n**Roles:** Both analyst and admin can access"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Profile by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token"
+              },
+              {
+                "key": "X-API-Version",
+                "value": "1",
+                "description": "API version (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/profiles/{{profile_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profiles", "{{profile_id}}"]
+            },
+            "description": "Get a specific profile by ID\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}`\n- `X-API-Version: 1` (required)\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"name\": \"John Doe\",\n    \"gender\": \"male\",\n    \"gender_probability\": 0.95,\n    \"age\": 28,\n    \"age_group\": \"adult\",\n    \"country_id\": \"US\",\n    \"country_name\": \"United States\",\n    \"country_probability\": 0.89,\n    \"created_at\": \"2024-04-27T10:00:00Z\"\n  }\n}\n```\n\n**Roles:** Both analyst and admin can access"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Search Profiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token"
+              },
+              {
+                "key": "X-API-Version",
+                "value": "1",
+                "description": "API version (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/profiles/search?q=young+males+from+nigeria&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profiles", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "young males from nigeria",
+                  "description": "Natural language search query"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Results per page (default: 10)"
+                }
+              ]
+            },
+            "description": "Search profiles using natural language queries\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}`\n- `X-API-Version: 1` (required)\n\n**Query Parameters:**\n- `q`: Natural language search query (e.g., \"young males from nigeria\")\n- `page`: Page number for pagination\n- `limit`: Results per page\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"page\": 1,\n  \"limit\": 10,\n  \"total\": 45,\n  \"total_pages\": 5,\n  \"links\": {\n    \"self\": \"/api/profiles/search?q=young+males+from+nigeria&page=1&limit=10\",\n    \"next\": \"/api/profiles/search?q=young+males+from+nigeria&page=2&limit=10\",\n    \"prev\": null\n  },\n  \"data\": [...]\n}\n```\n\n**Roles:** Both analyst and admin can access"
+          },
+          "response": []
+        },
+        {
+          "name": "4. Create Profile (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token (admin role required)"
+              },
+              {
+                "key": "X-API-Version",
+                "value": "1",
+                "description": "API version (required)"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Harriet Tubman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/profiles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profiles"]
+            },
+            "description": "Create a new profile (Admin only)\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}` (admin role required)\n- `X-API-Version: 1` (required)\n- `Content-Type: application/json`\n\n**Request Body:**\n```json\n{\n  \"name\": \"Harriet Tubman\"\n}\n```\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"name\": \"Harriet Tubman\",\n    \"gender\": \"female\",\n    \"gender_probability\": 0.97,\n    \"age\": 28,\n    \"age_group\": \"adult\",\n    \"country_id\": \"US\",\n    \"country_name\": \"United States\",\n    \"country_probability\": 0.89,\n    \"created_at\": \"2024-04-27T10:00:00Z\"\n  }\n}\n```\n\n**Process:**\n1. Calls agify API to get age\n2. Calls genderize API to get gender\n3. Calls nationalize API to get country\n4. Stores enriched profile in database\n\n**Roles:** Admin only (analyst will receive 403 Forbidden)"
+          },
+          "response": []
+        },
+        {
+          "name": "5. Delete Profile (Admin Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token (admin role required)"
+              },
+              {
+                "key": "X-API-Version",
+                "value": "1",
+                "description": "API version (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/profiles/{{profile_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profiles", "{{profile_id}}"]
+            },
+            "description": "Delete a profile (Admin only)\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}` (admin role required)\n- `X-API-Version: 1` (required)\n\n**Response:**\n```json\n{\n  \"status\": \"success\",\n  \"message\": \"Profile deleted successfully\"\n}\n```\n\n**Roles:** Admin only (analyst will receive 403 Forbidden)"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Export Profiles as CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "description": "Access token"
+              },
+              {
+                "key": "X-API-Version",
+                "value": "1",
+                "description": "API version (required)"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/profiles/export?format=csv&gender=male&country=NG&sort-by=age&order=desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "profiles", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv",
+                  "description": "Export format (currently only csv)"
+                },
+                {
+                  "key": "gender",
+                  "value": "male",
+                  "description": "Filter by gender",
+                  "disabled": true
+                },
+                {
+                  "key": "country",
+                  "value": "NG",
+                  "description": "Filter by country code",
+                  "disabled": true
+                },
+                {
+                  "key": "age-group",
+                  "value": "adult",
+                  "description": "Filter by age group",
+                  "disabled": true
+                },
+                {
+                  "key": "min-age",
+                  "value": \"25\",\n                  \"description\": \"Minimum age\",\n                  \"disabled\": true\n                },\n                {\n                  \"key\": \"max-age\",\n                  \"value\": \"40\",\n                  \"description\": \"Maximum age\",\n                  \"disabled\": true\n                },\n                {\n                  \"key\": \"sort-by\",\n                  \"value\": \"age\",\n                  \"description\": \"Sort field\",\n                  \"disabled\": true\n                },\n                {\n                  \"key\": \"order\",\n                  \"value\": \"desc\",\n                  \"description\": \"Sort order\",\n                  \"disabled\": true\n                }\n              ]\n            },\n            \"description\": \"Export profiles as CSV file\n\n**Headers:**\n- `Authorization: Bearer {{access_token}}`\n- `X-API-Version: 1` (required)\n\n**Query Parameters:**\n- `format`: Export format (csv)\n- `gender`, `country`, `age-group`, `min-age`, `max-age`: Filters (same as list endpoint)\n- `sort-by`, `order`: Sorting options\n\n**Response:**\n- Content-Type: text/csv\n- Content-Disposition: attachment; filename=\"profiles_<timestamp>.csv\"\n\n**CSV Columns:**\nid, name, gender, gender_probability, age, age_group, country_id, country_name, country_probability, created_at\n\n**Roles:** Both analyst and admin can access\"\n          }\n        }\n      ]\n    },\n    {\n      \"name\": \"Health Check\",\n      \"item\": [\n        {\n          \"name\": \"Health Status\",\n          \"request\": {\n            \"method\": \"GET\",\n            \"header\": [],\n            \"url\": {\n              \"raw\": \"{{base_url}}/health\",\n              \"host\": [\"{{base_url}}\"],\n              \"path\": [\"health\"]\n            },\n            \"description\": \"Check if the server is running\n\n**Response:**\n```json\n{\n  \"status\": \"ok\",\n  \"message\": \"Server is running\"\n}\n```\"\n          },\n          \"response\": []\n        }\n      ]\n    }\n  ],\n  \"variable\": [\n    {\n      \"key\": \"base_url\",\n      \"value\": \"http://localhost:5000\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"web_portal_url\",\n      \"value\": \"http://localhost:3000\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"access_token\",\n      \"value\": \"\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"refresh_token\",\n      \"value\": \"\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"code_challenge\",\n      \"value\": \"\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"state\",\n      \"value\": \"\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"github_code\",\n      \"value\": \"\",\n      \"type\": \"string\"\n    },\n    {\n      \"key\": \"profile_id\",\n      \"value\": \"\",\n      \"type\": \"string\"\n    }\n  ]\n}
