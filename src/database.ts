@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { Profile } from './entities/Profile';
+import { User } from './entities/User';
+import { TokenMetadata } from './entities/TokenMetadata';
 
 dotenv.config();
 
@@ -17,7 +19,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DATABASE_NAME || '',
   synchronize: true, // Auto-create schema from entities (migrations will be skipped)
   logging: process.env.NODE_ENV !== 'production',
-  entities: [Profile],
+  entities: [Profile, User, TokenMetadata],
   migrations: process.env.NODE_ENV === 'production' ? ['dist/migrations/*.js'] : ['src/migrations/*.ts'],
   subscribers: [],
   migrationsRun: false, // Disabled - using synchronize instead
